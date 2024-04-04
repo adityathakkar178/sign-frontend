@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 
 const App = () => {
@@ -7,13 +7,23 @@ const App = () => {
 
     const handleSignMessage = async () => {
         try {
-            const response = await axios.post(
-                'http://localhost:3001/sign',
-                {
-                    message: message,
-                }
-            );
-            setSignature(response.data.signature);
+            if (window.ethereum) {
+                const accounts = await window.ethereum.request({
+                    method: 'eth_requestAccounts',
+                });
+                const signerAddress = accounts[0];
+                const signature = await window.ethereum.request({
+                    method: 'personal_sign',
+                    params: [message, signerAddress],
+                });
+                const response = await axios.post(
+                    'http://localhost:3001/sign',
+                    {
+                        message: message,
+                    }
+                );
+                setSignature(signature);
+            }
         } catch (error) {
             console.error('Error signing message:', error);
         }
@@ -31,6 +41,6 @@ const App = () => {
             {signature && <div>Signature: {signature}</div>}
         </div>
     );
-}
+};
 
 export default App;
