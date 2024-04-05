@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import Web3 from 'web3'; // Import Web3.js
+import Web3 from 'web3';
 
 const App = () => {
     const [message, setMessage] = useState('');
