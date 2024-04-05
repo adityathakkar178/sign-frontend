@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import Web3 from 'web3'; // Import Web3.js
 
 const App = () => {
     const [message, setMessage] = useState('');
     const [signature, setSignature] = useState('');
     const [signingMethod, setSigningMethod] = useState('personal_sign');
+    const [decodedSigner, setDecodedSigner] = useState('');
 
     const handleSignMessage = async () => {
         try {
@@ -76,7 +78,7 @@ const App = () => {
                                     version: '1',
                                     chainId: 11155111,
                                     verifyingContract:
-                                        '0xE9D276443CC8eD56e4b660e93759005b362C55a7',
+                                        '0xAC838C755E519C99BcC2AffabcDe33F5Dc8D37b1',
                                 },
                                 message: {
                                     from: {
@@ -108,6 +110,25 @@ const App = () => {
         }
     };
 
+    const handleDecodeSignature = async () => {
+        try {
+            if (signature && window.ethereum) {
+                const accounts = await window.ethereum.request({
+                    method: 'eth_requestAccounts',
+                });
+                const signerAddress = accounts[0];
+                const web3 = new Web3(window.ethereum);
+                const signer = await web3.eth.personal.ecRecover(
+                    message,
+                    signature
+                );
+                setDecodedSigner(signer);
+            }
+        } catch (error) {
+            console.error('Error decoding signature:', error);
+        }
+    };
+
     return (
         <div>
             <input
@@ -126,7 +147,14 @@ const App = () => {
                 </option>
             </select>
             <button onClick={handleSignMessage}>Sign Message</button>
+            <button
+                onClick={handleDecodeSignature}
+                disabled={signingMethod !== 'personal_sign'}
+            >
+                Decode Signer
+            </button>
             {signature && <div>Signature: {signature}</div>}
+            {decodedSigner && <div>Decoded Signer: {decodedSigner}</div>}
         </div>
     );
 };
