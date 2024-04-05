@@ -4,6 +4,7 @@ import axios from 'axios';
 const App = () => {
     const [message, setMessage] = useState('');
     const [signature, setSignature] = useState('');
+    const [signingMethod, setSigningMethod] = useState('personal_sign');
 
     const handleSignMessage = async () => {
         try {
@@ -12,17 +13,95 @@ const App = () => {
                     method: 'eth_requestAccounts',
                 });
                 const signerAddress = accounts[0];
-                const signature = await window.ethereum.request({
-                    method: 'personal_sign',
-                    params: [message, signerAddress],
-                });
+
+                let signatureResponse;
+                if (signingMethod === 'personal_sign') {
+                    signatureResponse = await window.ethereum.request({
+                        method: 'personal_sign',
+                        params: [message, signerAddress],
+                    });
+                } else if (signingMethod === 'eth_signTypedData_v4') {
+                    signatureResponse = await window.ethereum.request({
+                        method: 'eth_signTypedData_v4',
+                        params: [
+                            '0x2D4742c77824E4faFbee5720AB4Aa34bf3602da8',
+                            {
+                                types: {
+                                    EIP712Domain: [
+                                        {
+                                            name: 'name',
+                                            type: 'string',
+                                        },
+                                        {
+                                            name: 'version',
+                                            type: 'string',
+                                        },
+                                        {
+                                            name: 'chainId',
+                                            type: 'uint256',
+                                        },
+                                        {
+                                            name: 'verifyingContract',
+                                            type: 'address',
+                                        },
+                                    ],
+                                    Person: [
+                                        {
+                                            name: 'name',
+                                            type: 'string',
+                                        },
+                                        {
+                                            name: 'wallet',
+                                            type: 'address',
+                                        },
+                                    ],
+                                    Mail: [
+                                        {
+                                            name: 'from',
+                                            type: 'Person',
+                                        },
+                                        {
+                                            name: 'to',
+                                            type: 'Person',
+                                        },
+                                        {
+                                            name: 'contents',
+                                            type: 'string',
+                                        },
+                                    ],
+                                },
+                                primaryType: 'Mail',
+                                domain: {
+                                    name: 'Ether Mail',
+                                    version: '1',
+                                    chainId: 11155111,
+                                    verifyingContract:
+                                        '0x4Fe0fb54f56b596c9cE8A16ac4b8C01E6ef5B517',
+                                },
+                                message: {
+                                    from: {
+                                        name: 'Aditya',
+                                        wallet: '0x2D4742c77824E4faFbee5720AB4Aa34bf3602da8',
+                                    },
+                                    to: {
+                                        name: 'Thakkar',
+                                        wallet: '0x0fF73A331A49Da82e2517Cb7Cd1f38283ad75251',
+                                    },
+                                    contents: 'Hello, Thakkar!',
+                                },
+                            },
+                        ],
+                    });
+                }
                 const response = await axios.post(
                     'http://localhost:3001/sign',
                     {
                         message: message,
+                        signature: signatureResponse,
+                        signingMethod: signingMethod,
                     }
                 );
-                setSignature(signature);
+                setSignature(signatureResponse);
             }
         } catch (error) {
             console.error('Error signing message:', error);
@@ -37,6 +116,15 @@ const App = () => {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
             />
+            <select
+                value={signingMethod}
+                onChange={(e) => setSigningMethod(e.target.value)}
+            >
+                <option value="personal_sign">personal_sign</option>
+                <option value="eth_signTypedData_v4">
+                    eth_signTypedData_v4
+                </option>
+            </select>
             <button onClick={handleSignMessage}>Sign Message</button>
             {signature && <div>Signature: {signature}</div>}
         </div>
