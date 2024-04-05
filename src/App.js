@@ -76,7 +76,7 @@ const App = () => {
                                     version: '1',
                                     chainId: 11155111,
                                     verifyingContract:
-                                        '0x4Fe0fb54f56b596c9cE8A16ac4b8C01E6ef5B517',
+                                        '0xE9D276443CC8eD56e4b660e93759005b362C55a7',
                                 },
                                 message: {
                                     from: {
@@ -87,7 +87,7 @@ const App = () => {
                                         name: 'Thakkar',
                                         wallet: '0x0fF73A331A49Da82e2517Cb7Cd1f38283ad75251',
                                     },
-                                    contents: 'Hello, Thakkar!',
+                                    contents: message,
                                 },
                             },
                         ],
