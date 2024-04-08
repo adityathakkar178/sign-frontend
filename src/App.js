@@ -7,6 +7,7 @@ const App = () => {
     const [signature, setSignature] = useState('');
     const [signingMethod, setSigningMethod] = useState('personal_sign');
     const [decodedSigner, setDecodedSigner] = useState('');
+    const [verificationResult, setVerificationResult] = useState('');
 
     const handleSignMessage = async () => {
         try {
@@ -78,7 +79,7 @@ const App = () => {
                                     version: '1',
                                     chainId: 11155111,
                                     verifyingContract:
-                                        '0xAC838C755E519C99BcC2AffabcDe33F5Dc8D37b1',
+                                        '0xB0Aa5182c3fD7aC374BFF2A4B840C7Bc6e019A1e',
                                 },
                                 message: {
                                     from: {
@@ -129,6 +130,52 @@ const App = () => {
         }
     };
 
+    const handleVerifySignature = async () => {
+        try {
+            if (signature && window.ethereum) {
+                const accounts = await window.ethereum.request({
+                    method: 'eth_requestAccounts',
+                });
+                const signerAddress = accounts[0];
+                const web3 = new Web3(window.ethereum);
+
+                const contractABIResponse = await axios.get(
+                    'http://localhost:3001/contract-abi'
+                );
+                console.log(contractABIResponse);
+                const contractABI = contractABIResponse.data.abi;
+                console.log(contractABI);
+                const contractAddress =
+                    '0xB0Aa5182c3fD7aC374BFF2A4B840C7Bc6e019A1e';
+
+                const contract = new web3.eth.Contract(
+                    contractABI,
+                    contractAddress
+                );
+                console.log(contract);
+                const result = await contract.methods
+                    .verifySignature(
+                        {
+                            name: 'Aditya',
+                            wallet: '0x2D4742c77824E4faFbee5720AB4Aa34bf3602da8',
+                        },
+                        {
+                            name: 'Thakkar',
+                            wallet: '0x0fF73A331A49Da82e2517Cb7Cd1f38283ad75251',
+                        },
+                        message,
+                        signature
+                    )
+                    .call();
+
+                setVerificationResult(result);
+                console.log(accounts);
+            }
+        } catch (error) {
+            console.error('Error verifying signature:', error);
+        }
+    };
+
     return (
         <div>
             <input
@@ -153,8 +200,17 @@ const App = () => {
             >
                 Decode Signer
             </button>
+            <button
+                onClick={handleVerifySignature}
+                disabled={signingMethod !== 'eth_signTypedData_v4'}
+            >
+                Verify Signature
+            </button>
             {signature && <div>Signature: {signature}</div>}
             {decodedSigner && <div>Decoded Signer: {decodedSigner}</div>}
+            {verificationResult !== '' && (
+                <div>Verification Result: {verificationResult.toString()}</div>
+            )}
         </div>
     );
 };
