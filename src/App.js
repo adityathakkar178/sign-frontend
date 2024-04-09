@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { ethers } from 'ethers';
 import Web3 from 'web3';
 
 const App = () => {
@@ -24,48 +25,44 @@ const App = () => {
                         params: [message, signerAddress],
                     });
                 } else if (signingMethod === 'eth_signTypedData_v4') {
-                    signatureResponse = await window.ethereum.request({
-                        method: 'eth_signTypedData_v4',
-                        params: [
-                            '0x2D4742c77824E4faFbee5720AB4Aa34bf3602da8',
-                            {
-                                types: {
-                                    EIP712Domain: [
-                                        {
-                                            name: 'name',
-                                            type: 'string',
-                                        },
-                                        {
-                                            name: 'version',
-                                            type: 'string',
-                                        },
-                                        {
-                                            name: 'chainId',
-                                            type: 'uint256',
-                                        },
-                                        {
-                                            name: 'verifyingContract',
-                                            type: 'address',
-                                        },
-                                    ],
-                                    Message: [{ name: 'message', type: 'string' }],
-                                },
-                                primaryType: 'Message',
-                                domain: {
-                                    name: 'Ether Mail',
-                                    version: '1',
-                                    chainId: 11155111,
-                                    verifyingContract:
-                                        '0x14FA0721FBBB3A84D49fF66673AC4a08AE4c6aE3',
-                                },
-                                message: {
-                                    message: message,
-                                },
-                            },
-                        ],
-                        
-                    });
+                    const provider = new ethers.providers.Web3Provider(
+                        window.ethereum
+                    );
+                    const signer = provider.getSigner();
+                    const typedData = {
+                        types: {
+                            EIP712Domain: [
+                                { name: 'name', type: 'string' },
+                                { name: 'version', type: 'string' },
+                                { name: 'chainId', type: 'uint256' },
+                                { name: 'verifyingContract', type: 'address' },
+                            ],
+                            Message: [
+                                { name: 'value', type: 'uint256' },
+                                { name: 'sender', type: 'address' },
+                                { name: 'message', type: 'string' },
+                            ],
+                        },
+                        domain: {
+                            name: 'Ether Mail',
+                            version: '1',
+                            chainId: 11155111,
+                            verifyingContract:
+                                '0x01329ED36380dF7D35bCd598D7BF44358013EE25',
+                        },
+                        primaryType: 'Message',
+                        message: {
+                            value: 100,
+                            sender: signerAddress,
+                            message: message,
+                        },
+                    };
+                    signatureResponse = await signer.provider.send(
+                        'eth_signTypedData_v4',
+                        [signerAddress, JSON.stringify(typedData)]
+                    );
                 }
+
                 const response = await axios.post(
                     'http://localhost:3001/sign',
                     {
@@ -116,19 +113,15 @@ const App = () => {
                 const contractABI = contractABIResponse.data.abi;
                 console.log(contractABI);
                 const contractAddress =
-                    '0x14FA0721FBBB3A84D49fF66673AC4a08AE4c6aE3';
+                    '0x3d656ea632a7fe19d0516413e2cd677f4983dc05';
 
                 const contract = new web3.eth.Contract(
                     contractABI,
-                    contractAddress,
+                    contractAddress
                 );
                 console.log(contract);
                 const result = await contract.methods
-                    .verifySignature(
-                        message,
-                        signature,
-                        signerAddress
-                    )
+                    .verifySignature(message, signature, signerAddress)
                     .call();
 
                 setVerificationResult(result);
