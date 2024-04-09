@@ -48,52 +48,22 @@ const App = () => {
                                             type: 'address',
                                         },
                                     ],
-                                    Person: [
-                                        {
-                                            name: 'name',
-                                            type: 'string',
-                                        },
-                                        {
-                                            name: 'wallet',
-                                            type: 'address',
-                                        },
-                                    ],
-                                    Mail: [
-                                        {
-                                            name: 'from',
-                                            type: 'Person',
-                                        },
-                                        {
-                                            name: 'to',
-                                            type: 'Person',
-                                        },
-                                        {
-                                            name: 'contents',
-                                            type: 'string',
-                                        },
-                                    ],
+                                    Message: [{ name: 'message', type: 'string' }],
                                 },
-                                primaryType: 'Mail',
+                                primaryType: 'Message',
                                 domain: {
                                     name: 'Ether Mail',
                                     version: '1',
                                     chainId: 11155111,
                                     verifyingContract:
-                                        '0xB0Aa5182c3fD7aC374BFF2A4B840C7Bc6e019A1e',
+                                        '0x14FA0721FBBB3A84D49fF66673AC4a08AE4c6aE3',
                                 },
                                 message: {
-                                    from: {
-                                        name: 'Aditya',
-                                        wallet: '0x2D4742c77824E4faFbee5720AB4Aa34bf3602da8',
-                                    },
-                                    to: {
-                                        name: 'Thakkar',
-                                        wallet: '0x0fF73A331A49Da82e2517Cb7Cd1f38283ad75251',
-                                    },
-                                    contents: message,
+                                    message: message,
                                 },
                             },
                         ],
+                        
                     });
                 }
                 const response = await axios.post(
@@ -146,25 +116,18 @@ const App = () => {
                 const contractABI = contractABIResponse.data.abi;
                 console.log(contractABI);
                 const contractAddress =
-                    '0xB0Aa5182c3fD7aC374BFF2A4B840C7Bc6e019A1e';
+                    '0x14FA0721FBBB3A84D49fF66673AC4a08AE4c6aE3';
 
                 const contract = new web3.eth.Contract(
                     contractABI,
-                    contractAddress
+                    contractAddress,
                 );
                 console.log(contract);
                 const result = await contract.methods
                     .verifySignature(
-                        {
-                            name: 'Aditya',
-                            wallet: '0x2D4742c77824E4faFbee5720AB4Aa34bf3602da8',
-                        },
-                        {
-                            name: 'Thakkar',
-                            wallet: '0x0fF73A331A49Da82e2517Cb7Cd1f38283ad75251',
-                        },
                         message,
-                        signature
+                        signature,
+                        signerAddress
                     )
                     .call();
 
